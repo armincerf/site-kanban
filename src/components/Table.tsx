@@ -38,10 +38,10 @@ function GlobalFilter({
 
   return (
     <label className="flex gap-x-2 items-baseline">
-      <span className="text-gray-700">Search: </span>
+      <span className="text-gray-700 text-xs">Search: </span>
       <input
         type="text"
-        className="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+        className="w-full md:w-10/12 mr-2 box-border text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
         value={value || ""}
         onChange={(e) => {
           setValue(e.target.value);
@@ -91,9 +91,9 @@ export function SelectColumnFilter({
 
   return (
     <label className="flex gap-x-2 items-baseline">
-      <span className="text-gray-700">{render("Header")}: </span>
+      <span className="text-gray-700 text-xs">{render("Header")}: </span>
       <select
-        className="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+        className="w-full md:w-10/12 box-border mr-2 rounded-md text-xs border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
         name={id}
         id={id}
         value={filterValue || ""}
@@ -211,23 +211,24 @@ function Table({
   // Render the UI for your table
   return (
     <>
-      <div className="sm:flex sm:gap-x-2 items-center  mt-4">
-        <GlobalFilter
-          preGlobalFilteredRows={preGlobalFilteredRows}
-          globalFilter={state.globalFilter}
-          setGlobalFilter={setGlobalFilter}
-        />
-        {headerGroups.map((headerGroup) =>
-          headerGroup.headers.map((column) =>
-            column.Filter ? (
-              <div key={column.id}>{column.render("Filter")}</div>
-            ) : null
-          )
-        )}
-
+      <div className="flex justify-between flex-wrap sm:flex-nowrap w-full my-1 p-3 items-center bg-slate-300 border-b border-gray-200 sm:rounded-lg">
+        <div className="flex flex-col md:flex-row">
+          <GlobalFilter
+            preGlobalFilteredRows={preGlobalFilteredRows}
+            globalFilter={state.globalFilter}
+            setGlobalFilter={setGlobalFilter}
+          />
+          {headerGroups.map((headerGroup) =>
+            headerGroup.headers.map((column) =>
+              column.Filter ? (
+                <div key={column.id}>{column.render("Filter")}</div>
+              ) : null
+            )
+          )}
+        </div>
         <button
           type="button"
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="max-h-8 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           onClick={() => {
             navigate({
               search: {
