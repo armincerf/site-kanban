@@ -126,7 +126,89 @@ export function SelectColumnFilter({
     </label>
   );
 }
+export function DateFilter({
+  column: { filterValue, setFilter, preFilteredRows, id, render },
+}: {
+  column: {
+    filterValue: any;
+    setFilter: (value: any) => void;
+    preFilteredRows: Row<object>[];
+    id: string;
+    render: any;
+  };
+}) {
+  const getDateString = (daysAgo: number) => {
+    const date = new Date();
+    return new Date(date.setDate(date.getDate() - daysAgo))
+      .toISOString()
+      .split("T")[0];
+  };
+  // Calculate the options for filtering
+  // using the preFilteredRows
+  const options = useMemo(() => {
+    return [
+      {
+        label: "Today",
+        value: getDateString(0),
+      },
+      {
+        label: "Yesterday",
+        value: getDateString(1),
+      },
+      {
+        label: "Last 7 days",
+        value: getDateString(7),
+      },
+      {
+        label: "Last 30 days",
+        value: getDateString(30),
+      },
+    ];
+  }, [id, preFilteredRows]);
+  // Render a multi-select box
 
+  const navigate = useNavigate<LocationGenerics>();
+  const search = useSearch<LocationGenerics>();
+
+  const filters = search.filters;
+
+  useEffect(() => {
+    if (filters?.[id]) {
+      setFilter(filters[id]);
+    }
+  }, [filters, id]);
+
+  return (
+    <label className="flex gap-x-2 items-baseline first:mt-0 mt-2 sm:mt-0">
+      <FilterLabel label={render("Header")} />
+      <select
+        className="w-full md:w-10/12 box-border mr-2 rounded-md text-xs border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+        name={id}
+        id={id}
+        value={filterValue || ""}
+        onChange={(e) => {
+          navigate({
+            search: {
+              ...search,
+              filters: {
+                ...search.filters,
+                [id]: e.target.value,
+              },
+            },
+          });
+          setFilter(e.target.value || undefined);
+        }}
+      >
+        <option value="">All</option>
+        {options.map(({ label, value }, i) => (
+          <option key={i} value={value}>
+            {label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
 export function StatusPill({ value }: { value: string }) {
   const status = value ? value.toLowerCase() : "unknown";
 

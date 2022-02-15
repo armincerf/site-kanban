@@ -31,19 +31,17 @@ import { useNavigate, useSearch } from "react-location";
 import classNames from "classnames";
 import _ from "lodash";
 import DOMPurify from "dompurify";
-import Table from "./components/Table";
+import Table, { DateFilter } from "./components/Table";
 import Tippy, { useSingleton } from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
-import {SelectColumnFilter} from "./components/Table"
-
-
+import { SelectColumnFilter } from "./components/Table";
+import { Row } from "react-table";
 
 type CardProps = {
   card: TCard;
   workflow: TWorkflow;
   index: number;
 };
-  
 
 const DraggableCard = React.memo(({ card, index, workflow }: CardProps) => {
   const [, setIsOpen] = useModalForm({
@@ -236,7 +234,6 @@ const WorkflowState = React.memo(
   }
 );
 
-
 function filteredCards(
   cards: TCard[] | undefined,
   projectId: string | undefined
@@ -385,6 +382,7 @@ function Workflow({ workflow }: { workflow: TWorkflow }) {
   });
   const [isDragging, setIsDragging] = React.useState(false);
   const isGrid = search.view === "table";
+
   const gridData = React.useMemo(() => {
     return [
       ...cols
@@ -394,6 +392,7 @@ function Workflow({ workflow }: { workflow: TWorkflow }) {
         ]),
     ];
   }, [cols]);
+
   const gridColumns = React.useMemo(() => {
     return [
       {
@@ -408,19 +407,32 @@ function Workflow({ workflow }: { workflow: TWorkflow }) {
       {
         id: "state",
         Header: "State",
-        accessor: "state", 
-        Filter: SelectColumnFilter
+        accessor: "state",
+        Filter: SelectColumnFilter,
       },
       {
         id: "project",
         Header: "Project",
-        accessor: "project.name",   
-         Filter: SelectColumnFilter
+        accessor: "project.name",
       },
       {
         id: "lastUpdated",
         Header: "Last Updated",
         accessor: "_siteValidTime",
+        Filter: DateFilter,
+        filter: (rows: Array<Row>, ids: Array<string>, filterValue: string) => {
+          const filteredRows = rows.filter((row) => {
+            const rowValue = row.values[ids[0]];
+            const rowDate = new Date(rowValue);
+            const filterDate = new Date(filterValue);
+
+            if (rowValue) {
+              return rowDate.getTime() >= filterDate.getTime();
+            }
+            return false;
+          });
+          return filteredRows;
+        },
       },
     ];
   }, []);
