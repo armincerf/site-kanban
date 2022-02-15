@@ -6,6 +6,8 @@ import {
   useSortBy,
   usePagination,
   Row,
+  useFlexLayout,
+  useResizeColumns,
 } from "react-table";
 import {
   ChevronDoubleLeftIcon,
@@ -16,7 +18,7 @@ import {
 import { Button, PageButton } from "./Buttons";
 import { SortIcon, SortUpIcon, SortDownIcon } from "./Icons";
 import classNames from "classnames";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Fragment } from "react";
 import { useNavigate, useSearch } from "react-location";
 import { LocationGenerics } from "../types";
 
@@ -37,8 +39,8 @@ function GlobalFilter({
   }, 200);
 
   return (
-    <label className="flex gap-x-2 items-baseline">
-      <span className="text-gray-700 text-xs">Search: </span>
+    <label className="flex gap-x-2 items-baseline first:mt-0 mt-2 sm:mt-0">
+      <FilterLabel label={"Search"} />
       <input
         type="text"
         className="w-full md:w-10/12 mr-2 box-border text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
@@ -51,6 +53,10 @@ function GlobalFilter({
       />
     </label>
   );
+}
+
+function FilterLabel({ label }: { label: string }) {
+  return <span className="text-gray-700 text-xs w-20 ">{label}: </span>;
 }
 
 // This is a custom filter UI for selecting
@@ -90,8 +96,8 @@ export function SelectColumnFilter({
   }, [filters, id]);
 
   return (
-    <label className="flex gap-x-2 items-baseline">
-      <span className="text-gray-700 text-xs">{render("Header")}: </span>
+    <label className="flex gap-x-2 items-baseline first:mt-0 mt-2 sm:mt-0">
+      <FilterLabel label={render("Header")} />
       <select
         className="w-full md:w-10/12 box-border mr-2 rounded-md text-xs border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
         name={id}
@@ -175,6 +181,14 @@ function Table({
   columns: any;
   data: any;
 }) {
+  const defaultColumn = useMemo(() => {
+    return {
+      minWidth: 25,
+      width: 100,
+      maxWidth: 320,
+    };
+  }, []);
+
   // Use the state and functions returned from useTable to build your UI
   const {
     getTableProps,
@@ -198,12 +212,15 @@ function Table({
     {
       columns,
       data,
+      defaultColumn,
       autoResetFilters: false,
     },
     useFilters,
     useGlobalFilter,
     useSortBy,
-    usePagination
+    usePagination,
+    useFlexLayout,
+    useResizeColumns
   );
   const showPagination = canNextPage || canPreviousPage;
   const navigate = useNavigate<LocationGenerics>();
@@ -221,14 +238,14 @@ function Table({
           {headerGroups.map((headerGroup) =>
             headerGroup.headers.map((column) =>
               column.Filter ? (
-                <div key={column.id}>{column.render("Filter")}</div>
+                <Fragment key={column.id}>{column.render("Filter")}</Fragment>
               ) : null
             )
           )}
         </div>
         <button
           type="button"
-          className="max-h-8 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="inline-flex items-center align-center mt-2 sm:mt-0 mx-auto sm:mx-0 px-4 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           onClick={() => {
             navigate({
               search: {
@@ -245,28 +262,32 @@ function Table({
       {/* table */}
       <div
         className={classNames(
-          "mt-4 flexw-full  flex-col md:w-fit",
+          "mt-4 flex w-full flex-col",
           !showPagination && "pb-4"
         )}
       >
-        <div className="-my-2 overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8">
-          <div className="py-2 align-middle inline-block sm:px-6 lg:px-8 w-full">
-            <div className="relative sm:shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-              <table {...getTableProps()} className="divide-y divide-gray-200">
-                <thead className="bg-gray-50 sm:visible invisible absolute sm:relative">
-                  {headerGroups.map((headerGroup) => (
-                    <tr {...headerGroup.getHeaderGroupProps()}>
-                      {headerGroup.headers.map((column) => (
+        <div className="py-2 align-middle inline-block w-full">
+          <div className="relative sm:shadow sm:overflow-x-auto border-b border-gray-200 sm:rounded-lg">
+            <table
+              {...getTableProps()}
+              className="divide-y divide-gray-200 w-full"
+            >
+              <thead className="bg-gray-50 sm:visible invisible absolute sm:relative">
+                {headerGroups.map((headerGroup) => (
+                  <tr {...headerGroup.getHeaderGroupProps()}>
+                    {headerGroup.headers.map((column) => {
+                      return (
                         // Add the sorting props to control sorting. For this example
                         // we can add them into the header props
                         <th
                           scope="col"
-                          className="group px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          {...column.getHeaderProps(
-                            column.getSortByToggleProps()
-                          )}
+                          {...column.getHeaderProps()}
+                          className="border-r-2 border-gray-200 group px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
-                          <div className="flex items-center justify-between">
+                          <div
+                            className="flex items-center justify-between"
+                            {...column.getSortByToggleProps()}
+                          >
                             {column.render("Header")}
                             {/* Add a sort direction indicator */}
                             <span>
@@ -281,57 +302,63 @@ function Table({
                               )}
                             </span>
                           </div>
+                          <div
+                            {...column.getResizerProps()}
+                            className="inline-block border-gray-500 w-1 h-full absolute right-0 top-0 translate-x-2/4 z-1 "
+                          />
                         </th>
-                      ))}
-                    </tr>
-                  ))}
-                </thead>
-                <tbody
-                  {...getTableBodyProps()}
-                  className="bg-white divide-y divide-gray-200"
-                >
-                  {page.map((row, i) => {
-                    // new
-                    prepareRow(row);
-                    return (
-                      <tr
-                        className={classNames(
-                          "shadow-lg sm:shadow-none mb-6 sm:mb-0 flex flex-row flex-wrap sm:table-row sm:hover:bg-gray-100",
-                          onRowClick && "cursor-pointer"
-                        )}
-                        onClick={() => onRowClick && onRowClick(row)}
-                        {...row.getRowProps()}
-                      >
-                        {row.cells.map((cell) => {
-                          return (
-                            <td
-                              className="sm:flex-1 w-1/2 sm:w-full pt-8 sm:pt-0 relative sm:flex-nowrap px-6 py-4 text-left"
-                              {...cell.getCellProps()}
-                              role="cell"
-                            >
+                      );
+                    })}
+                  </tr>
+                ))}
+              </thead>
+              <tbody
+                {...getTableBodyProps()}
+                className="bg-white divide-y divide-gray-200"
+              >
+                {page.map((row) => {
+                  prepareRow(row);
+                  return (
+                    <tr
+                      className={classNames(
+                        "shadow-lg sm:shadow-none mb-6 sm:mb-0 flex flex-row flex-wrap sm:table-row sm:hover:bg-gray-100",
+                        onRowClick && "cursor-pointer"
+                      )}
+                      onClick={() => onRowClick && onRowClick(row)}
+                      {...row.getRowProps()}
+                    >
+                      {row.cells.map((cell) => {
+                        return (
+                          <td
+                            className="border-r-2 last:border-r-0 overflow-hidden w-1/2 sm:w-full pt-8 sm:pt-0 relative sm:flex-nowrap px-6 py-4 text-left"
+                            {...cell.getCellProps()}
+                            role="cell"
+                          >
+                            <div className="flex items-center justify-between">
                               <span className="group text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:hidden absolute top-0 inset-x-0 p-1 bg-gray-50 pl-2">
                                 {cell.column.Header}
                               </span>
-                              {
-                                //@ts-ignore
-                                cell?.column?.Cell?.name ===
-                                "defaultRenderer" ? (
-                                  <div className="text-sm text-gray-500">
-                                    {cell.render("Cell")}
-                                  </div>
-                                ) : (
-                                  cell.render("Cell")
-                                )
-                              }
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                              <div className="inline-block border-gray-500 w-1 h-full absolute right-0 top-0 translate-x-2/4 z-1 " />
+                            </div>
+
+                            {
+                              //@ts-ignore
+                              cell?.column?.Cell?.name === "defaultRenderer" ? (
+                                <div className="text-sm truncate text-gray-500">
+                                  {cell.render("Cell")}
+                                </div>
+                              ) : (
+                                cell.render("Cell")
+                              )
+                            }
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
